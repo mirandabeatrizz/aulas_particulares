@@ -35,6 +35,15 @@ const Agendamento = banco.define('agendamento', {
         allowNull: false,
     },
 
+    duracao: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    data: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+
     valor_final: {
         type: DataTypes.FLOAT,
         allowNull: false,

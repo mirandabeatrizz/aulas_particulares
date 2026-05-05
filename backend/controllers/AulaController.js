@@ -18,7 +18,7 @@ const aula = {
                 tipo_aula = novo_tipo;
             }
 
-            const aula = await Aula.create({ tipo_id: tipo_aula ? tipo_aula.id : tipo.id, valor: valor_hora });
+            const aula = await Aula.create({ tipo_id: tipo_aula ? tipo_aula.id : tipo.id, valor_hora: valor_hora });
             return res.status(200).json({ data: aula });
         } catch (error) {
             return res.status(500).json(error);
@@ -57,7 +57,7 @@ const aula = {
         try {
             const aula_id = req.params.id;
 
-            const aula = await Aula.sequelize.query(`Select a.id, t.nome, a.valor from aula a join tipo_aula t on a.tipo_id = t.id where a.id=${aula_id}`, { type: QueryTypes.SELECT });
+            const aula = await Aula.sequelize.query(`Select a.id, t.nome, a.valor_hora from aula a join tipo_aula t on a.tipo_id = t.id where a.id=${aula_id}`, { type: QueryTypes.SELECT });
 
             return res.status(200).json(aula);
         } catch (error) {
@@ -68,7 +68,7 @@ const aula = {
 
     async listar(req, res) {
         try {
-            const aulas = await Aula.sequelize.query(`Select a.id, t.nome, a.valor from aula a join tipo_aula t on a.tipo_id = t.id`, { type: QueryTypes.SELECT });
+            const aulas = await Aula.sequelize.query(`Select a.id, t.nome, a.valor_hora from aula a join tipo_aula t on a.tipo_id = t.id`, { type: QueryTypes.SELECT });
 
             return res.status(200).json({ data: aulas });
         } catch (error) {

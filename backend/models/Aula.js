@@ -9,7 +9,7 @@ const Aula = banco.define('aula', {
         primaryKey: true,
         autoIncrement: true,
     },
-    valor: {
+    valor_hora: {
         type: DataTypes.FLOAT,
         allowNull: false,
     },

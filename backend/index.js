@@ -32,6 +32,7 @@ api.post('/pessoa', pessoa.criarPessoa);
 api.put('/pessoa/:id', pessoa.editarPessoa);
 api.get('/pessoa', pessoa.listarPessoas);
 api.delete('/pessoa/:id', pessoa.deletar);
+api.delete('/professor/:id', pessoa.deletarProfessor);
 api.get('/pessoa/:id', pessoa.buscarPessoa);
 api.get('/pessoa/:cpf', pessoa.buscarPorCpf);
 
