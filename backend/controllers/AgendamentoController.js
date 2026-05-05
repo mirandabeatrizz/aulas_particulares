@@ -186,7 +186,6 @@ const agendamento = {
             return res.status(200).json('Agendamento atualizado com sucesso!');
 
         } catch (error) {
-            console.error(error);
             return res.status(500).json('Erro interno ao atualizar o agendamento.');
         }
     },
@@ -197,7 +196,7 @@ const agendamento = {
 
             const agendamento = await Agendamento.findByPk(agendamento_id);
 
-            if (!agendamento) return res.status(500).json({ msg: 'agendamento nao encontrado!' });
+            if (!agendamento) return res.status(404).json({ msg: 'agendamento nao encontrado!' });
 
             await Agendamento.destroy({ where: { id: agendamento_id } });
             return res.status(200).json('agendamento excluido com sucesso');
@@ -230,7 +229,6 @@ const agendamento = {
 
             return res.status(200).json(agendamentos);
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error);
         }
     },
@@ -260,7 +258,7 @@ const agendamento = {
                 join pessoa aluno on aluno.id = ag.pessoa_id 
                 where ag.id =${agendamento_id}`, { type: QueryTypes.SELECT });
 
-            if (!agendamento.length > 0) return res.status(500).json('Não encontrado');
+            if (!agendamento.length > 0) return res.status(404).json('Não encontrado');
 
             return res.status(200).json(agendamento);
         } catch (error) {

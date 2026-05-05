@@ -19,7 +19,7 @@ const pessoa = {
                     await Professor.create({ pessoa_id: pessoa[0].id, cnd: cnd })
                     return res.status(200).json('Pessoa vinculada como professor')
                 }
-                return res.status(500).json(pessoa[0].cnd && cnd ? 'Já existe um professor com esse cpf cadastrado!' : 'Já existe uma pessoa com esse cpf cadastrado!');
+                return res.status(400).json(pessoa[0].cnd && cnd ? 'Já existe um professor com esse cpf cadastrado!' : 'Já existe uma pessoa com esse cpf cadastrado!');
             }
 
             const nova_pessoa = await Pessoa.create({ nome: nome, cpf: cpf });
@@ -41,9 +41,9 @@ const pessoa = {
 
             const pessoa = await Pessoa.findByPk(pessoa_id);
 
-            if (!pessoa) return res.status(500).json('Pessoa não encontrada')
+            if (!pessoa) return res.status(404).json('Pessoa não encontrada')
 
-            if(pessoa.cpf == cpf) return res.status(500).json('Não é possível atualizar o cpf para um cpf já cadastrado')
+            if(pessoa.cpf == cpf) return res.status(400).json('Não é possível atualizar o cpf para um cpf já cadastrado')
 
             await pessoa.update({
                 nome: nome,
@@ -82,6 +82,7 @@ const pessoa = {
             const cpf = req.params.cpf;
 
             const pessoa = await Pessoa.findOne({ where: { cpf: cpf } });
+            if(!pessoa) return res.status(404).json('Pessoa não encontrada.')
 
             return res.status(200).json(pessoa);
         } catch (error) {
@@ -113,7 +114,6 @@ const pessoa = {
 
             return res.status(200).json(resultados);
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error);
         }
     },
@@ -124,11 +124,11 @@ const pessoa = {
             // se tiver agendamento não pode excluir
             const agendamentos = await Agendamento.findAll({ where: { pessoa_id: pessoa_id } });
 
-            if (agendamentos.length > 0) return res.status(500).json('Não é possível excluir uma pessoa que possui agendamento(s)');
+            if (agendamentos.length > 0) return res.status(400).json('Não é possível excluir uma pessoa que possui agendamento(s)');
 
             const professor = await Professor.findOne({ where: { pessoa_id: pessoa_id } });
 
-            if (professor) return res.status(500).json(`Primeiro remova o vinculo de professor (${professor.id}) para excluir a pessoa`);
+            if (professor) return res.status(400).json(`Primeiro remova o vinculo de professor (${professor.id}) para excluir a pessoa`);
 
             await Pessoa.destroy({ where: { id: pessoa_id } });
 
@@ -142,11 +142,11 @@ const pessoa = {
             const id = req.params.id;
             const excluir_pessoa = req.query.excluir_pessoa;
 
-            if (!id) return res.status(500).json('Parametros invalidos');
+            if (!id) return res.status(400).json('Parametros invalidos');
 
             const professor = await Professor.findByPk(id);
 
-            if (!professor) return res.status(500).json('Professor nao encontrado');
+            if (!professor) return res.status(404).json('Professor não encontrado');
             let pessoa_id = professor.pessoa_id;
 
             await Professor.destroy({ where: { id: professor.id } })

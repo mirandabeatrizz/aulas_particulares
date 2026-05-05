@@ -30,11 +30,11 @@ const aula = {
             const aula_id = req.params.id;
             const { tipo, valor_hora } = req.body;
 
-            if (!aula_id) return res.status(500).json({ msg: 'Parametros inválidos' });
+            if (!aula_id) return res.status(400).json({ msg: 'Parametros inválidos' });
 
             const aula = await Aula.findByPk(aula_id);
 
-            if (!aula) return res.status(500).json('Aula não encontrada');
+            if (!aula) return res.status(404).json('Aula não encontrada');
 
             const tipo_aula = await TipoAula.findOne({ where: { nome: tipo } })
 
@@ -61,7 +61,6 @@ const aula = {
 
             return res.status(200).json(aula);
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error);
         }
     },
@@ -82,7 +81,7 @@ const aula = {
 
             const agendamento = await Agendamento.findOne({ where: { aula_id: aula_id } });
 
-            if (agendamento) return res.status(500).json({ msg: 'Não é possível excluir uma aula com agendamento' });
+            if (agendamento) return res.status(400).json({ msg: 'Não é possível excluir uma aula com agendamento' });
 
             const aula = await Aula.findByPk(aula_id)
             if (aula) await Aula.destroy({ where: { id: aula_id } });

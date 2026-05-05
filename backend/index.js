@@ -36,7 +36,6 @@ api.delete('/professor/:id', pessoa.deletarProfessor);
 api.get('/pessoa/:id', pessoa.buscarPessoa);
 api.get('/pessoa/:cpf', pessoa.buscarPorCpf);
 
-
 // Liga o servidor
 api.listen(3000, () => {
     console.log('Api rodando na porta 3000...');
