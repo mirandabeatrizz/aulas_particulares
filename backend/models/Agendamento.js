@@ -9,18 +9,18 @@ const Agendamento = banco.define('agendamento', {
         autoIncrement: true,
     },
     // pessoa representa o aluno
-    pessoa_id: {
-        type: DataTypes.INTEGER,
+    aluno: {
+        type: DataTypes.STRING,
         allowNull: false,
     },
     //professor que dara a aula
-    professor_id: {
-        type: DataTypes.INTEGER,
+    professor: {
+        type: DataTypes.STRING,
         allowNull: false,
     },
 
     //aula do agendamento
-    aula_id: {
+    tipo_aula_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
     },

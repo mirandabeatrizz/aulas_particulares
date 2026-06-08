@@ -1,9 +1,6 @@
 import { Op, QueryTypes } from 'sequelize';
 import Agendamento from '../models/Agendamento.js';
-import Aula from '../models/Aula.js';
-import Pessoa from '../models/Pessoa.js';
-import Professor from '../models/Professor.js';
-import pessoa from './PessoaController.js';
+import TipoAula from '../models/TipoAula.js';
 
 // verificar se os dados estão no formato correto e devolver a duração da aula e calcular o valor que será cobrado conforme o valor da aula por hora
 function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
@@ -52,12 +49,10 @@ function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
 const agendamento = {
     async criar(req, res) {
         try {
-            const { data, horario_inicio, horario_fim, aula_id, aluno_id, professor_pessoa_id } = req.body;
-
-            if (aluno_id === professor_pessoa_id) return res.status(500).json('Aluno e professor não podem ser a mesma pessoa.');
+            const { data, aula_id, horario_inicio, horario_fim, aluno, professor } = req.body;
 
             //verificar se a aula para qual esta tentando criar um agendamento existe
-            const aula = await Aula.findByPk(aula_id);
+            const aula = await TipoAula.findByPk(aula_id);
 
             // se nao tiver a aula ja retorna
             if (!aula) return res.status(404).json('Aula não encontrada.');
@@ -66,45 +61,10 @@ const agendamento = {
 
             if (dados_horarios.erro) return res.status(400).json(dados_horarios.msg)
 
-            const pessoas = await Pessoa.findAll({
-                where: {
-                    id: {
-                        [Op.in]: [aluno_id, professor_pessoa_id]
-                    }
-                }
-            });
-
-            // verifica se encontrou as pessoas
-            if (pessoas.length === 0) {
-                return res.status(404).json('Pessoas não encontradas para fazer o agendamento');
-            }
-
-            let professorid = null;
-            let alunoid = null;
-
-            for (const pessoa of pessoas) {
-                if (pessoa.id == professor_pessoa_id) {
-
-                    const professor = await Professor.findOne({ where: { pessoa_id: professor_pessoa_id } });
-
-                    if (!professor) {
-                        return res.status(404).json('Professor informado não foi encontrado, verifique e tente novamente');
-                    }
-                    professorid = professor.id;
-
-                } else if (pessoa.id == aluno_id) {
-                    alunoid = pessoa.id;
-                }
-            }
-
-            if (!professorid || !alunoid) {
-                return res.status(400).json('Aluno ou professor não possuem os vínculos corretos.');
-            }
-
             await Agendamento.create({
                 aula_id: aula.id,
-                professor_id: professorid,
-                pessoa_id: alunoid,
+                professor: professor,
+                aluno: aluno,
                 valor_final: dados_horarios.valor_total,
                 horario_inicio: horario_inicio,
                 horario_fim: horario_fim,
@@ -122,60 +82,23 @@ const agendamento = {
         try {
 
             const { id } = req.params;
-            const { data, horario_inicio, horario_fim, aula_id, aluno_id, professor_pessoa_id } = req.body;
+            const { data, horario_inicio, horario_fim, aula_id, aluno, professor } = req.body;
 
             const agendamento = await Agendamento.findByPk(id);
             if (!agendamento) {
                 return res.status(404).json('Agendamento não encontrado.');
             }
 
-            if (aluno_id === professor_pessoa_id) {
-                return res.status(400).json('Aluno e professor não podem ser a mesma pessoa.');
-            }
-
-            const aula = await Aula.findByPk(aula_id);
+            const aula = await TipoAula.findByPk(aula_id);
             if (!aula) return res.status(404).json('Aula não encontrada.');
 
             const dados_horarios = verificaDadosHoras(horario_inicio, horario_fim, aula.valor_hora);
             if (dados_horarios.erro) return res.status(400).json(dados_horarios.msg);
 
-            const pessoas = await Pessoa.findAll({
-                where: {
-                    id: {
-                        [Op.in]: [aluno_id, professor_pessoa_id]
-                    }
-                }
-            });
-
-            if (pessoas.length === 0) {
-                return res.status(404).json('Pessoas não encontradas para fazer a atualização.');
-            }
-
-            let professorid = null;
-            let alunoid = null;
-
-            for (const pessoa of pessoas) {
-                if (pessoa.id == professor_pessoa_id) {
-                    const professor = await Professor.findOne({ where: { pessoa_id: professor_pessoa_id } });
-
-                    if (!professor) {
-                        return res.status(404).json('Professor informado não foi encontrado, verifique e tente novamente');
-                    }
-                    professorid = professor.id;
-
-                } else if (pessoa.id == aluno_id) {
-                    alunoid = pessoa.id;
-                }
-            }
-
-            if (!professorid || !alunoid) {
-                return res.status(400).json('Aluno ou professor não possuem os vínculos corretos.');
-            }
-
             await agendamento.update({
                 aula_id: aula.id,
-                professor_id: professorid,
-                pessoa_id: alunoid,
+                professor: professor,
+                aluno: aluno,
                 valor_final: dados_horarios.valor_total,
                 horario_inicio: horario_inicio,
                 horario_fim: horario_fim,
@@ -209,26 +132,23 @@ const agendamento = {
     async listar(req, res) {
         try {
             const agendamentos = await Agendamento.sequelize.query(`select 
-                aluno.nome AS nome_aluno,
-                nome_prof.nome AS nome_professor,
+                ag.id,
+                ag.aluno,
+                ag.professor,
                 ta.nome AS tipo_aula,
-                au.valor_hora,
-                ag.valor_final AS valor_total,
+                ta.valor_hora,
+                ag.valor_final,
                 to_char(ag.data, 'DD/MM/YYYY') as data,
                 ag.duracao,
                 ag.horario_inicio,
                 ag.horario_fim
 
                 from agendamento ag
-
-                join professor prof on prof.id = ag.professor_id
-                join pessoa nome_prof on nome_prof.id = prof.pessoa_id 
-                join aula au on au.id = ag.aula_id 
-                join tipo_aula ta on ta.id = au.tipo_id
-                join pessoa aluno on aluno.id = ag.pessoa_id `, { type: QueryTypes.SELECT });
+                join tipo_aula ta on ta.id = ag.tipo_aula_id `, { type: QueryTypes.SELECT });
 
             return res.status(200).json(agendamentos);
         } catch (error) {
+            console.log(error)
             return res.status(500).json(error);
         }
     },

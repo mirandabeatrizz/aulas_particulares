@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
 import banco from '../config/database.js';
-import Aula from './Aula.js';
 
 const TipoAula = banco.define('tipo_aula', {
     id: {
@@ -11,6 +10,10 @@ const TipoAula = banco.define('tipo_aula', {
     },
     nome: {
         type: DataTypes.STRING,
+        allowNull: false,
+    },
+     valor_hora: {
+        type: DataTypes.NUMBER,
         allowNull: false,
     }
 });
