@@ -1,20 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import AgendamentoForm from './AgendamentoForm';
 import { ConfigRequest } from '../../config/configRequest';
+import { useAlert } from '../../components/Alert';
+import ModalConfirm from '../../components/ModalConfirm';
 
 const AgendamentoList = () => {
-
-    // Estado para controlar a exibição do modal
+    const { showAlert } = useAlert();
     const [showModal, setShowModal] = useState(false);
     const [data, setData] = useState([])
-    const [busca, setBusca] = useState(false)
-
+    const [busca, setBusca] = useState(false);
+    const [id, setId] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     useEffect(() => {
         if (data.length == 0 && !busca) {
             getAgendamentos();
         }
     }, [])
+
+
+    const handleId = (id, context) => {
+        setId(id);
+        if (context == 'editar') {
+            setShowModal(true);
+        } else setShowDeleteModal(true)
+    };
+
+    const handleRemoveFromList = (deletedId) => {
+        // filtrar o array, mantendo apenas os itens que tem o id diferente do excluído
+        setData((prevList) => prevList.filter(tipo => tipo.id !== deletedId));
+    };
+
+     const handleFormSuccess = (savedItem, actionType) => {
+    if (actionType === 'PUT') {
+      // se for edição mapeia o array e substitui apenas o item que tem o mesmo id
+      setData((prevData) =>
+        prevData.map((item) => (item.id === savedItem.id ? savedItem : item))
+      );
+    } else if (actionType === 'POST') {
+      // se for novo pega a lista anterior e adiciona o item no final
+      setData((prevData) => [...prevData, savedItem]);
+    }
+  };
 
     async function getAgendamentos() {
 
@@ -24,7 +51,7 @@ const AgendamentoList = () => {
                 setBusca(true)
             })
             .catch((error) => {
-                console.log(error)
+                showAlert('error', 'Ocorreu um erro ao buscar lista de agendamentos!');
             });
 
     }
@@ -57,8 +84,20 @@ const AgendamentoList = () => {
                                     </span>
                                 </div>
                                 <div className="text-secondary fs-5">
-                                    <i className="bi bi-pencil me-3" style={{ cursor: 'pointer' }}></i>
-                                    <i className="bi bi-trash" style={{ cursor: 'pointer' }}></i>
+                                    <button
+                                        onClick={() => handleId(agend.id, 'editar')}
+                                        className="btn btn-link p-0 text-secondary border-0 text-decoration-none"
+                                        title="Editar"
+                                    >
+                                        <i className="bi bi-pencil"></i>
+                                    </button>
+                                    <button
+                                        onClick={() => handleId(agend.id, 'excluir')}
+                                        className="btn btn-link p-0 text-secondary border-0 text-decoration-none"
+                                        title="Excluir"
+                                    >
+                                        <i className="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -91,7 +130,7 @@ const AgendamentoList = () => {
                         </div>
                     </div>
                 ))}
-              
+
             </div>
             {showModal && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
@@ -102,15 +141,35 @@ const AgendamentoList = () => {
                                 <button
                                     type="button"
                                     className="btn-close"
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => { setShowModal(false); setId(null); }}
                                 ></button>
                             </div>
                             <div className="modal-body p-4">
-                                <AgendamentoForm onClose={() => setShowModal(false)} />
+                                <AgendamentoForm
+                                    id={id}
+                                    onSuccess={handleFormSuccess}
+                                    onClose={() => {
+                                        setShowModal(false);
+                                        setId(null);
+                                    }} />
                             </div>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showDeleteModal && (
+                <ModalConfirm
+                    id={id}
+                    rota={'agendamento'}
+                    isOpen={showDeleteModal}
+                    closeModal={() => {
+                        setShowDeleteModal(false);
+                        setId(null);
+                    }}
+                    onSuccess={handleRemoveFromList}
+                    message="Esta ação não poderá ser desfeita. Tem certeza que deseja remover este tipo de aula?"
+                />
             )}
         </div>
     );

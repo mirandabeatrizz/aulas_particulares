@@ -37,12 +37,6 @@ const TipoAulaList = () => {
     } else setShowDeleteModal(true)
   };
 
-  const tiposAula = [
-    { id: 1, nome: 'Matemática', valor: '80,00', tagBg: '#eff6ff', tagColor: '#3b82f6' },
-    { id: 2, nome: 'Inglês', valor: '90,00', tagBg: '#dcfce7', tagColor: '#22c55e' },
-    { id: 3, nome: 'Programação', valor: '120,00', tagBg: '#faf5ff', tagColor: '#a855f7' }
-  ];
-
   const handleRemoveFromList = (deletedId) => {
     // filtrar o array, mantendo apenas os itens que tem o id diferente do excluído
     setData((prevList) => prevList.filter(tipo => tipo.id !== deletedId));

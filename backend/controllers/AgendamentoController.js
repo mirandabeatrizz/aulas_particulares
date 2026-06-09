@@ -1,6 +1,7 @@
 import { Op, QueryTypes } from 'sequelize';
 import Agendamento from '../models/Agendamento.js';
 import TipoAula from '../models/TipoAula.js';
+import dayjs from 'dayjs'
 
 // verificar se os dados estão no formato correto e devolver a duração da aula e calcular o valor que será cobrado conforme o valor da aula por hora
 function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
@@ -49,10 +50,10 @@ function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
 const agendamento = {
     async criar(req, res) {
         try {
-            const { data, aula_id, horario_inicio, horario_fim, aluno, professor } = req.body;
+            const { data, tipo_aula_id, horario_inicio, horario_fim, aluno, professor } = req.body;
 
             //verificar se a aula para qual esta tentando criar um agendamento existe
-            const aula = await TipoAula.findByPk(aula_id);
+            const aula = await TipoAula.findByPk(tipo_aula_id);
 
             // se nao tiver a aula ja retorna
             if (!aula) return res.status(404).json('Aula não encontrada.');
@@ -61,8 +62,8 @@ const agendamento = {
 
             if (dados_horarios.erro) return res.status(400).json(dados_horarios.msg)
 
-            await Agendamento.create({
-                aula_id: aula.id,
+            const agend = await Agendamento.create({
+                tipo_aula_id: aula.id,
                 professor: professor,
                 aluno: aluno,
                 valor_final: dados_horarios.valor_total,
@@ -72,7 +73,28 @@ const agendamento = {
                 data: data
             });
 
-            return res.status(200).json('Sucesso')
+            //ag.id,
+            // ag.aluno,
+            // ag.professor,
+            // ta.nome AS tipo_aula,
+            // ta.valor_hora,
+            // ag.valor_final,
+            // to_char(ag.data, 'DD/MM/YYYY') as data,
+            // ag.duracao,
+            // ag.horario_inicio,
+            // ag.horario_fim
+
+            return res.status(200).json({
+                id: agend.id,
+                aluno: agend.aluno,
+                professor: agend.professor,
+                valor_final: agend.valor_final,
+                duracao: agend.duracao,
+                horario_inicio: horario_inicio,
+                horario_fim: horario_fim,
+                data: dayjs(agend.data).format('DD/MM/YYYY'),
+                tipo_aula: aula.nome
+            })
         } catch (error) {
             return res.status(500).json(error);
         }
@@ -82,21 +104,21 @@ const agendamento = {
         try {
 
             const { id } = req.params;
-            const { data, horario_inicio, horario_fim, aula_id, aluno, professor } = req.body;
+            const { data, horario_inicio, horario_fim, tipo_aula_id, aluno, professor } = req.body;
 
             const agendamento = await Agendamento.findByPk(id);
             if (!agendamento) {
                 return res.status(404).json('Agendamento não encontrado.');
             }
 
-            const aula = await TipoAula.findByPk(aula_id);
+            const aula = await TipoAula.findByPk(tipo_aula_id);
             if (!aula) return res.status(404).json('Aula não encontrada.');
 
             const dados_horarios = verificaDadosHoras(horario_inicio, horario_fim, aula.valor_hora);
             if (dados_horarios.erro) return res.status(400).json(dados_horarios.msg);
 
             await agendamento.update({
-                aula_id: aula.id,
+                tipo_aula_id: aula.id,
                 professor: professor,
                 aluno: aluno,
                 valor_final: dados_horarios.valor_total,
@@ -106,7 +128,17 @@ const agendamento = {
                 data: data
             });
 
-            return res.status(200).json('Agendamento atualizado com sucesso!');
+            return res.status(200).json({
+                id: agendamento.id,
+                aluno: agendamento.aluno,
+                professor: agendamento.professor,
+                valor_final: agendamento.valor_final,
+                duracao: agendamento.duracao,
+                horario_inicio: agendamento.horario_inicio,
+                horario_fim: agendamento.horario_fim,
+                data: dayjs(agendamento.data).format('DD/MM/YYYY'),
+                tipo_aula: aula.nome
+            });
 
         } catch (error) {
             return res.status(500).json('Erro interno ao atualizar o agendamento.');
@@ -158,30 +190,28 @@ const agendamento = {
             const agendamento_id = req.params.id;
 
             //const agendamento = await Agendamento.findByPK(agendamento_id);
-            const agendamento = await Agendamento.sequelize.query(`select 
-                aluno.nome AS nome_aluno,
-                nome_prof.nome AS nome_professor,
+            const agendamento = await Agendamento.sequelize.query(`
+                select 
+                ag.id,
+                ag.aluno,
+                ag.professor,
                 ta.nome AS tipo_aula,
-                au.valor_hora,
-                ag.valor_final AS valor_total,
-                to_char(ag.data, 'DD/MM/YYYY') as data,
+                ta.id as tipo_aula_id,
+                ag.valor_final,
+                ag.data,
                 ag.duracao,
                 ag.horario_inicio,
                 ag.horario_fim
 
                 from agendamento ag
-
-                join professor prof on prof.id = ag.professor_id
-                join pessoa nome_prof on nome_prof.id = prof.pessoa_id 
-                join aula au on au.id = ag.aula_id 
-                join tipo_aula ta on ta.id = au.tipo_id
-                join pessoa aluno on aluno.id = ag.pessoa_id 
+                join tipo_aula ta on ta.id = ag.tipo_aula_id
                 where ag.id =${agendamento_id}`, { type: QueryTypes.SELECT });
 
             if (!agendamento.length > 0) return res.status(404).json('Não encontrado');
 
-            return res.status(200).json(agendamento);
+            return res.status(200).json(agendamento[0]);
         } catch (error) {
+            console.log(error)
             return res.status(500).json(error);
         }
     },

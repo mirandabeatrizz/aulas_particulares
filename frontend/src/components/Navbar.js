@@ -9,7 +9,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
           <i className="bi bi-calendar3 fs-4"></i>
         </div>
         <div>
-          <h3 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>EduAgenda</h3>
+          <h3 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>Aulas Particulares</h3>
           <small className="text-secondary">Sistema de agendamento de aulas</small>
         </div>
       </div>
