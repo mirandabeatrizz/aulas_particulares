@@ -1,12 +1,11 @@
-
-import React, { useEffect, useState } from 'react';
-import { ConfigRequest } from '../../config/configRequest'
+import { useEffect, useState } from 'react';
 import { useAlert } from '../../components/Alert';
+import { ConfigRequest } from '../../config/configRequest';
 
 const TipoAulaForm = ({ id, onClose, onSuccess }) => {
     const { showAlert } = useAlert();
     const [corSelecionada, setCorSelecionada] = useState('Azul');
-    const [values, setValues] = useState({ id: '', nome: '', valor_hora: '', cor: '' })
+    const [values, setValues] = useState({ id: '', nome: '', valor_hora: '', cor: '' });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -25,7 +24,7 @@ const TipoAulaForm = ({ id, onClose, onSuccess }) => {
             // formata para o padrão brasileiro (ex: 1.250,00)
             const valorFormatado = new Intl.NumberFormat('pt-BR', {
                 minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                maximumFractionDigits: 2,
             }).format(valorNumerico);
 
             setValues({ ...values, [name]: valorFormatado });
@@ -37,18 +36,17 @@ const TipoAulaForm = ({ id, onClose, onSuccess }) => {
 
     useEffect(() => {
         if (id) {
-            RequestTipoAula('GET', null, id)
+            RequestTipoAula('GET', null, id);
         }
-
-    }, [])
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (id) {
-            await RequestTipoAula('PUT', values, id)
+            await RequestTipoAula('PUT', values, id);
         } else {
-            await RequestTipoAula('POST', values, null)
+            await RequestTipoAula('POST', values, null);
         }
     };
 
@@ -56,8 +54,20 @@ const TipoAulaForm = ({ id, onClose, onSuccess }) => {
         return await ConfigRequest(tipo_req, 'tipo_aula', id, values)
             .then((response) => {
                 if (response.data) {
-                    setValues(response.data)
-                    if (tipo_req !== 'GET') {
+                    if (tipo_req === 'GET') {
+                        const novos_dados = response.data;
+
+                        //formatar valor do backend para não bugar se nao alterar o valor
+                        if (novos_dados.valor_hora) {
+                            novos_dados.valor_hora = new Intl.NumberFormat('pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            }).format(parseFloat(novos_dados.valor_hora));
+                        }
+
+                        setValues(novos_dados);
+                    } else {
+                        setValues(response.data);
                         if (onSuccess) onSuccess(response.data, tipo_req);
                         showAlert('success', 'Registro salvo com sucesso!');
                         onClose();
@@ -70,7 +80,7 @@ const TipoAulaForm = ({ id, onClose, onSuccess }) => {
     }
 
     return (
-        <form onSubmit={handleSubmit} >
+        <form onSubmit={handleSubmit}>
             <div className="row g-3 mb-4">
                 <div className="col-12 col-md-7">
                     <label className="form-label text-secondary small mb-1">Nome</label>
@@ -86,7 +96,7 @@ const TipoAulaForm = ({ id, onClose, onSuccess }) => {
                 <div className="col-12 col-md-5">
                     <label className="form-label text-secondary small mb-1">Valor por hora (R$)</label>
                     <input
-                        name='valor_hora'
+                        name="valor_hora"
                         onChange={handleChange}
                         value={values.valor_hora}
                         type="text"
@@ -121,16 +131,10 @@ const TipoAulaForm = ({ id, onClose, onSuccess }) => {
             </div> */}
 
             <div className="d-flex justify-content-end gap-3 mt-2">
-                <button
-                    type="button"
-                    className="btn btn-white border px-4 fw-medium"
-                    onClick={onClose}
-                >
+                <button type="button" className="btn btn-white border px-4 fw-medium" onClick={onClose}>
                     Cancelar
                 </button>
-                <button type="submit"
-                    className="btn btn-dark px-4 fw-medium"
-                >
+                <button type="submit" className="btn btn-dark px-4 fw-medium">
                     Salvar
                 </button>
             </div>

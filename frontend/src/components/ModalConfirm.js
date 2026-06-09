@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ConfigRequest } from '../config/configRequest';
 import { useAlert } from './Alert';
 
-const ModalConfirm = ({ id, rota, isOpen, onSuccess,
+const ModalConfirm = ({
+    id,
+    rota,
+    isOpen,
+    onSuccess,
     closeModal,
-    title = "Excluir registro?",
-    message = "Esta ação não poderá ser desfeita. Tem certeza que deseja remover este item?" }) => {
-
+    title = 'Excluir registro?',
+    message = 'Esta ação não poderá ser desfeita. Tem certeza que deseja remover este item?',
+}) => {
     const { showAlert } = useAlert();
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -24,7 +28,6 @@ const ModalConfirm = ({ id, rota, isOpen, onSuccess,
         ConfigRequest('DELETE', rota, id, null)
             .then((response) => {
                 if (response.status == 200) {
-
                     showAlert('success', 'Registro excluído com sucesso!');
                     onSuccess(id);
                     closeModal();
@@ -32,7 +35,11 @@ const ModalConfirm = ({ id, rota, isOpen, onSuccess,
                 }
             })
             .catch((error) => {
-                showAlert('danger', 'Ocorreu um erro ao excluir o registro.');
+                closeModal();
+                showAlert(
+                    error.response && error.response.data.warning ? 'warning' : 'danger',
+                    error.response ? error.response.data.msg : 'Ocorreu um erro ao excluir o registro.',
+                );
                 setIsDeleting(false);
             });
     };
@@ -48,16 +55,10 @@ const ModalConfirm = ({ id, rota, isOpen, onSuccess,
                         <h5 className="fw-bold text-dark mb-2">{title}</h5>
                         <p className="text-secondary small mb-4">{message}</p>
                         <div className="d-flex justify-content-center gap-2">
-                            <button
-                                className="btn btn-light border fw-medium px-4"
-                                onClick={handleClose}
-                            >
+                            <button className="btn btn-light border fw-medium px-4" onClick={handleClose}>
                                 Cancelar
                             </button>
-                            <button
-                                className="btn btn-danger fw-medium px-4"
-                                onClick={handleConfirm}
-                            >
+                            <button className="btn btn-danger fw-medium px-4" onClick={handleConfirm}>
                                 Sim, excluir
                             </button>
                         </div>
@@ -65,7 +66,7 @@ const ModalConfirm = ({ id, rota, isOpen, onSuccess,
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default ModalConfirm;

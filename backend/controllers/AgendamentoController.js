@@ -1,7 +1,7 @@
-import { Op, QueryTypes } from 'sequelize';
+import dayjs from 'dayjs';
+import { QueryTypes } from 'sequelize';
 import Agendamento from '../models/Agendamento.js';
 import TipoAula from '../models/TipoAula.js';
-import dayjs from 'dayjs'
 
 // verificar se os dados estão no formato correto e devolver a duração da aula e calcular o valor que será cobrado conforme o valor da aula por hora
 function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
@@ -9,7 +9,7 @@ function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
     const regexHora = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
     if (!regexHora.test(hora_inicio) || !regexHora.test(hora_fim)) {
-        return { erro: true, msg: "Formato de hora inválido. Use HH:mm (00:00 até 23:59)." };
+        return { erro: true, msg: 'Formato de hora inválido. Use HH:mm (00:00 até 23:59).' };
     }
 
     // separa a hora e os minutos das entradas
@@ -22,7 +22,7 @@ function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
 
     //verifica se a hora de início é menor que a do fim
     if (total_ini_mm >= total_fim_mm) {
-        return { erro: true, msg: "A hora inicial deve ser obrigatoriamente menor que a hora final." };
+        return { erro: true, msg: 'A hora inicial deve ser obrigatoriamente menor que a hora final.' };
     }
 
     //subtrai o total do fim com o do inicio
@@ -32,9 +32,7 @@ function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
     const horas = Math.floor(duracao_minutos / 60);
     const minutos = duracao_minutos % 60;
 
-    const duracao_formatada =
-        String(horas).padStart(2, '0') + ':' +
-        String(minutos).padStart(2, '0');
+    const duracao_formatada = String(horas).padStart(2, '0') + ':' + String(minutos).padStart(2, '0');
 
     //calcula o valor total (Convertendo os minutos da duração para horas decimais)
     const horas_decimais = duracao_minutos / 60;
@@ -43,8 +41,8 @@ function verificaDadosHoras(hora_inicio, hora_fim, valor_hora) {
     return {
         sucesso: true,
         duracao: duracao_formatada,
-        valor_total: valor_total.toFixed(2) // duas casas decimais 
-    }
+        valor_total: valor_total.toFixed(2), // duas casas decimais
+    };
 }
 
 const agendamento = {
@@ -58,9 +56,9 @@ const agendamento = {
             // se nao tiver a aula ja retorna
             if (!aula) return res.status(404).json('Aula não encontrada.');
 
-            const dados_horarios = verificaDadosHoras(horario_inicio, horario_fim, aula.valor_hora)
+            const dados_horarios = verificaDadosHoras(horario_inicio, horario_fim, aula.valor_hora);
 
-            if (dados_horarios.erro) return res.status(400).json(dados_horarios.msg)
+            if (dados_horarios.erro) return res.status(400).json(dados_horarios.msg);
 
             const agend = await Agendamento.create({
                 tipo_aula_id: aula.id,
@@ -70,7 +68,7 @@ const agendamento = {
                 horario_inicio: horario_inicio,
                 horario_fim: horario_fim,
                 duracao: dados_horarios.duracao,
-                data: data
+                data: data,
             });
 
             //ag.id,
@@ -93,8 +91,8 @@ const agendamento = {
                 horario_inicio: horario_inicio,
                 horario_fim: horario_fim,
                 data: dayjs(agend.data).format('DD/MM/YYYY'),
-                tipo_aula: aula.nome
-            })
+                tipo_aula: aula.nome,
+            });
         } catch (error) {
             return res.status(500).json(error);
         }
@@ -102,7 +100,6 @@ const agendamento = {
 
     async editar(req, res) {
         try {
-
             const { id } = req.params;
             const { data, horario_inicio, horario_fim, tipo_aula_id, aluno, professor } = req.body;
 
@@ -125,7 +122,7 @@ const agendamento = {
                 horario_inicio: horario_inicio,
                 horario_fim: horario_fim,
                 duracao: dados_horarios.duracao,
-                data: data
+                data: data,
             });
 
             return res.status(200).json({
@@ -137,9 +134,8 @@ const agendamento = {
                 horario_inicio: agendamento.horario_inicio,
                 horario_fim: agendamento.horario_fim,
                 data: dayjs(agendamento.data).format('DD/MM/YYYY'),
-                tipo_aula: aula.nome
+                tipo_aula: aula.nome,
             });
-
         } catch (error) {
             return res.status(500).json('Erro interno ao atualizar o agendamento.');
         }
@@ -155,7 +151,6 @@ const agendamento = {
 
             await Agendamento.destroy({ where: { id: agendamento_id } });
             return res.status(200).json('agendamento excluido com sucesso');
-
         } catch (error) {
             return res.status(500).json(error);
         }
@@ -163,7 +158,8 @@ const agendamento = {
 
     async listar(req, res) {
         try {
-            const agendamentos = await Agendamento.sequelize.query(`select 
+            const agendamentos = await Agendamento.sequelize.query(
+                `select 
                 ag.id,
                 ag.aluno,
                 ag.professor,
@@ -176,11 +172,12 @@ const agendamento = {
                 ag.horario_fim
 
                 from agendamento ag
-                join tipo_aula ta on ta.id = ag.tipo_aula_id `, { type: QueryTypes.SELECT });
+                join tipo_aula ta on ta.id = ag.tipo_aula_id `,
+                { type: QueryTypes.SELECT },
+            );
 
             return res.status(200).json(agendamentos);
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error);
         }
     },
@@ -190,7 +187,8 @@ const agendamento = {
             const agendamento_id = req.params.id;
 
             //const agendamento = await Agendamento.findByPK(agendamento_id);
-            const agendamento = await Agendamento.sequelize.query(`
+            const agendamento = await Agendamento.sequelize.query(
+                `
                 select 
                 ag.id,
                 ag.aluno,
@@ -205,13 +203,14 @@ const agendamento = {
 
                 from agendamento ag
                 join tipo_aula ta on ta.id = ag.tipo_aula_id
-                where ag.id =${agendamento_id}`, { type: QueryTypes.SELECT });
+                where ag.id =${agendamento_id}`,
+                { type: QueryTypes.SELECT },
+            );
 
             if (!agendamento.length > 0) return res.status(404).json('Não encontrado');
 
             return res.status(200).json(agendamento[0]);
         } catch (error) {
-            console.log(error)
             return res.status(500).json(error);
         }
     },

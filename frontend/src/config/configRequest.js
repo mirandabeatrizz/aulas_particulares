@@ -1,13 +1,11 @@
-//import RestModulos from 'config/fetchData/data.js';
-import axios from "axios";
-const RestModulos = 'http://localhost:3000'
-
+import axios from 'axios';
+const RestModulos = 'http://localhost:3001';
 
 export const ConfigRequest = (req, rota, id, data) => {
     try {
         switch (req) {
             case 'GET':
-                return axios.get(`${RestModulos}/${rota}${id ? '/'+ id : ''}`);
+                return axios.get(`${RestModulos}/${rota}${id ? '/' + id : ''}`);
             case 'POST':
                 return axios.post(`${RestModulos}/${rota}`, data);
             case 'PUT':
@@ -18,7 +16,6 @@ export const ConfigRequest = (req, rota, id, data) => {
                 break;
         }
     } catch (error) {
-        console.log(error)
         return error;
     }
 };
